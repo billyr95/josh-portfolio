@@ -1,0 +1,22 @@
+import { sanityFetch } from '@/sanity/client'
+import { photosQuery } from '@/lib/sanity-queries'
+import { Photo } from '@/lib/types'
+import PhotoGrid from '@/components/PhotoGrid'
+
+export default async function PhotosPage() {
+  const photos = await sanityFetch<Photo[]>({
+    query: photosQuery,
+    tags: ['photo'],
+  })
+
+  return (
+    <main className="min-h-screen pt-32 pb-20">
+      <div className="max-w-7xl mx-auto px-6">
+        <h1 className="text-4xl font-light text-center mb-12 animate-fade-in">
+          Photo Portfolio
+        </h1>
+        <PhotoGrid photos={photos} />
+      </div>
+    </main>
+  )
+}
