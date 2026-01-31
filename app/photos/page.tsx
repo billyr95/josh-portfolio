@@ -12,9 +12,6 @@ export default async function PhotosPage() {
   return (
     <main className="min-h-screen pt-32 pb-20">
       <div className="max-w-7xl mx-auto px-6">
-        <h1 className="text-4xl font-light text-center mb-12 animate-fade-in">
-          Photo Portfolio
-        </h1>
         <PhotoGrid photos={photos} />
       </div>
     </main>

@@ -15,7 +15,7 @@ export default function PhotoCard({ photo, onClick }: PhotoCardProps) {
   return (
     <div
       onClick={onClick}
-      className="group relative aspect-video bg-gray-100 rounded-lg overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
+      className="group relative h-full w-full bg-gray-100 rounded-lg overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
     >
       <Image
         src={photo.imageUrl}

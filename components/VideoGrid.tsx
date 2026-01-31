@@ -15,14 +15,12 @@ export default function VideoGrid({ videos }: VideoGridProps) {
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null)
   const itemsPerLoad = 12
 
-  // Initialize with first batch
   useEffect(() => {
     if (videos.length > 0) {
       setDisplayedVideos(videos.slice(0, itemsPerLoad))
     }
   }, [videos])
 
-  // Infinite scroll implementation
   useEffect(() => {
     const handleScroll = () => {
       if (
@@ -47,15 +45,37 @@ export default function VideoGrid({ videos }: VideoGridProps) {
     }
   }, [displayedVideos, videos])
 
+  // Pattern repeats every 6 videos
+  const getItemClass = (index: number) => {
+    const pattern = index % 6
+    switch (pattern) {
+      case 0: // 1ab - tall (col 1, spans 2 rows)
+        return 'md:col-span-1 md:row-span-2'
+      case 1: // 2a - regular (col 2, row a)
+        return 'md:col-span-1 md:row-span-1'
+      case 2: // 3a - regular (col 3, row a)
+        return 'md:col-span-1 md:row-span-1'
+      case 3: // 4a - regular (col 4, row a)
+        return 'md:col-span-1 md:row-span-1'
+      case 4: // 23b - wide (cols 2-3, row b)
+        return 'md:col-span-2 md:row-span-1'
+      case 5: // 4b - regular (col 4, row b)
+        return 'md:col-span-1 md:row-span-1'
+      default:
+        return 'md:col-span-1 md:row-span-1'
+    }
+  }
+
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 auto-rows-[280px] gap-4">
         {displayedVideos.map((video, index) => (
           <motion.div
             key={video._id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: index * 0.05 }}
+            className={getItemClass(index)}
           >
             <VideoCard video={video} onClick={() => setSelectedVideo(video)} />
           </motion.div>
