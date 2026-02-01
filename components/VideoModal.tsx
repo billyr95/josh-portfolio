@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { Video } from '@/lib/types'
 import { motion, AnimatePresence } from 'framer-motion'
+import Image from 'next/image'
 
 interface VideoModalProps {
   video: Video | null
@@ -52,28 +53,66 @@ export default function VideoModal({ video, onClose }: VideoModalProps) {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="relative max-w-6xl w-full"
+            className="relative max-w-5xl w-full max-h-[90vh] overflow-y-auto hide-scrollbar"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={onClose}
-              className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors text-4xl font-light leading-none"
+              className="sticky top-0 float-right z-10 text-white hover:text-gray-300 transition-colors text-4xl font-light leading-none bg-black/50 rounded-full w-10 h-10 flex items-center justify-center -mr-2 -mt-2"
               aria-label="Close modal"
             >
               ×
             </button>
-            <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
-              <video
-                ref={videoRef}
-                src={video.fullVideoUrl}
-                controls
-                controlsList="nodownload"
-                className="w-full h-full"
-              />
+            
+            <div className="bg-white rounded-lg overflow-hidden">
+              {/* Video */}
+              <div className="relative aspect-video bg-black">
+                <video
+                  ref={videoRef}
+                  src={video.fullVideoUrl}
+                  controls
+                  controlsList="nodownload"
+                  className="w-full h-full"
+                />
+              </div>
+
+              {/* Content */}
+              <div className="p-8">
+                {/* Title */}
+                <h1 className="text-3xl font-bold mb-2">{video.title}</h1>
+
+                {/* Byline */}
+                {video.byline && (
+                  <p className="text-gray-600 text-lg font-light mb-6">
+                    {video.byline}
+                  </p>
+                )}
+
+                {/* Description */}
+                {video.description && (
+                  <p className="text-gray-700 leading-relaxed mb-8 whitespace-pre-wrap">
+                    {video.description}
+                  </p>
+                )}
+
+                {/* Images */}
+                {video.images && video.images.length > 0 && (
+                  <div className="space-y-6">
+                    {video.images.map((image, index) => (
+                      <div key={index} className="relative w-full">
+                        <Image
+                          src={image.url}
+                          alt={image.alt || `Image ${index + 1}`}
+                          width={1200}
+                          height={800}
+                          className="w-full h-auto rounded-lg"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-            <h2 className="text-white text-center mt-4 text-lg font-light">
-              {video.title}
-            </h2>
           </motion.div>
         </motion.div>
       )}

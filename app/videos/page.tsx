@@ -10,7 +10,7 @@ export default async function VideosPage() {
   })
 
   return (
-    <main className="min-h-screen pt-32 pb-20">
+    <main className="min-h-screen py-12">
       <div className="max-w-7xl mx-auto px-6">
         <VideoGrid videos={videos} />
       </div>

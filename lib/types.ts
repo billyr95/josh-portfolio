@@ -5,6 +5,12 @@ export interface Video {
   previewVideoUrl: string
   fullVideoUrl: string
   thumbnailUrl?: string
+  byline?: string
+  description?: string
+  images?: Array<{
+    url: string
+    alt?: string
+  }>
   order: number
 }
 

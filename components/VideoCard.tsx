@@ -12,13 +12,26 @@ interface VideoCardProps {
 export default function VideoCard({ video, onClick }: VideoCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isLoaded, setIsLoaded] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const { ref, inView } = useInView({
     threshold: 0.3,
     triggerOnce: false,
   })
 
+  // Detect if we're on mobile/single column layout
   useEffect(() => {
-    if (videoRef.current) {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Autoplay on mobile when in view
+  useEffect(() => {
+    if (isMobile && videoRef.current) {
       if (inView) {
         videoRef.current.play().catch(() => {
           // Autoplay was prevented
@@ -27,13 +40,30 @@ export default function VideoCard({ video, onClick }: VideoCardProps) {
         videoRef.current.pause()
       }
     }
-  }, [inView])
+  }, [inView, isMobile])
+
+  const handleMouseEnter = () => {
+    if (!isMobile && videoRef.current) {
+      videoRef.current.play().catch(() => {
+        // Autoplay was prevented
+      })
+    }
+  }
+
+  const handleMouseLeave = () => {
+    if (!isMobile && videoRef.current) {
+      videoRef.current.pause()
+      videoRef.current.currentTime = 0
+    }
+  }
 
   return (
     <div
       ref={ref}
       onClick={onClick}
-      className="group relative h-full w-full bg-gray-100 rounded-lg overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      className="group relative h-full w-full bg-gray-100 overflow-hidden cursor-pointer shadow-sm hover:shadow-md transition-all duration-300"
     >
       <video
         ref={videoRef}

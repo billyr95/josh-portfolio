@@ -11,15 +11,21 @@ interface VideoGridProps {
 }
 
 export default function VideoGrid({ videos }: VideoGridProps) {
-  const [displayedVideos, setDisplayedVideos] = useState<Video[]>([])
+  const [displayedCount, setDisplayedCount] = useState(18)
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null)
-  const itemsPerLoad = 12
+  const itemsPerLoad = 6
 
-  useEffect(() => {
-    if (videos.length > 0) {
-      setDisplayedVideos(videos.slice(0, itemsPerLoad))
+  // Create infinite looping array
+  const getInfiniteVideos = (count: number) => {
+    if (videos.length === 0) return []
+    const result = []
+    for (let i = 0; i < count; i++) {
+      result.push(videos[i % videos.length])
     }
-  }, [videos])
+    return result
+  }
+
+  const displayedVideos = getInfiniteVideos(displayedCount)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -33,48 +39,65 @@ export default function VideoGrid({ videos }: VideoGridProps) {
 
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [displayedVideos, videos])
+  }, [])
 
   const loadMore = useCallback(() => {
-    if (displayedVideos.length < videos.length) {
-      const nextBatch = videos.slice(
-        displayedVideos.length,
-        displayedVideos.length + itemsPerLoad
-      )
-      setDisplayedVideos((prev) => [...prev, ...nextBatch])
-    }
-  }, [displayedVideos, videos])
+    setDisplayedCount((prev) => prev + itemsPerLoad)
+  }, [])
 
-  // Pattern repeats every 6 videos
+  // Three different patterns that rotate every 6 items
   const getItemClass = (index: number) => {
-    const pattern = index % 6
-    switch (pattern) {
-      case 0: // 1ab - tall (col 1, spans 2 rows)
-        return 'md:col-span-1 md:row-span-2'
-      case 1: // 2a - regular (col 2, row a)
-        return 'md:col-span-1 md:row-span-1'
-      case 2: // 3a - regular (col 3, row a)
-        return 'md:col-span-1 md:row-span-1'
-      case 3: // 4a - regular (col 4, row a)
-        return 'md:col-span-1 md:row-span-1'
-      case 4: // 23b - wide (cols 2-3, row b)
-        return 'md:col-span-2 md:row-span-1'
-      case 5: // 4b - regular (col 4, row b)
-        return 'md:col-span-1 md:row-span-1'
-      default:
-        return 'md:col-span-1 md:row-span-1'
+    const patternCycle = Math.floor(index / 6) % 3
+    const positionInPattern = index % 6
+
+    // Pattern 1: Tall on left
+    if (patternCycle === 0) {
+      switch (positionInPattern) {
+        case 0: return 'md:col-span-1 md:row-span-2'
+        case 1: return 'md:col-span-1 md:row-span-1'
+        case 2: return 'md:col-span-1 md:row-span-1'
+        case 3: return 'md:col-span-1 md:row-span-1'
+        case 4: return 'md:col-span-2 md:row-span-1'
+        case 5: return 'md:col-span-1 md:row-span-1'
+      }
     }
+    
+    // Pattern 2: Tall on right
+    if (patternCycle === 1) {
+      switch (positionInPattern) {
+        case 0: return 'md:col-span-1 md:row-span-1'
+        case 1: return 'md:col-span-1 md:row-span-1'
+        case 2: return 'md:col-span-1 md:row-span-1'
+        case 3: return 'md:col-span-1 md:row-span-2'
+        case 4: return 'md:col-span-1 md:row-span-1'
+        case 5: return 'md:col-span-2 md:row-span-1'
+      }
+    }
+    
+    // Pattern 3: Wide on top, tall on left
+    if (patternCycle === 2) {
+      switch (positionInPattern) {
+        case 0: return 'md:col-span-1 md:row-span-1'
+        case 1: return 'md:col-span-2 md:row-span-1'
+        case 2: return 'md:col-span-1 md:row-span-1'
+        case 3: return 'md:col-span-1 md:row-span-2'
+        case 4: return 'md:col-span-1 md:row-span-1'
+        case 5: return 'md:col-span-1 md:row-span-1'
+      }
+    }
+
+    return 'md:col-span-1 md:row-span-1'
   }
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-4 auto-rows-[280px] gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 auto-rows-[280px] gap-[5px]">
         {displayedVideos.map((video, index) => (
           <motion.div
-            key={video._id}
+            key={`${video._id}-${index}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: index * 0.05 }}
+            transition={{ duration: 0.5, delay: (index % 6) * 0.05 }}
             className={getItemClass(index)}
           >
             <VideoCard video={video} onClick={() => setSelectedVideo(video)} />
@@ -82,11 +105,9 @@ export default function VideoGrid({ videos }: VideoGridProps) {
         ))}
       </div>
 
-      {displayedVideos.length < videos.length && (
-        <div className="text-center mt-12">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
-        </div>
-      )}
+      <div className="text-center mt-12">
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
+      </div>
 
       <VideoModal
         video={selectedVideo}

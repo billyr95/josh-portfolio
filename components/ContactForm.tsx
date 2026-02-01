@@ -15,14 +15,30 @@ export default function ContactForm() {
     e.preventDefault()
     setStatus('submitting')
 
-    // Simulate form submission (you'll want to implement actual submission logic)
-    setTimeout(() => {
-      setStatus('success')
-      setFormData({ name: '', email: '', message: '' })
-      
-      // Reset success message after 3 seconds
-      setTimeout(() => setStatus('idle'), 3000)
-    }, 1000)
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      if (response.ok) {
+        setStatus('success')
+        setFormData({ name: '', email: '', message: '' })
+        
+        // Reset success message after 5 seconds
+        setTimeout(() => setStatus('idle'), 5000)
+      } else {
+        setStatus('error')
+        setTimeout(() => setStatus('idle'), 5000)
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error)
+      setStatus('error')
+      setTimeout(() => setStatus('idle'), 5000)
+    }
   }
 
   const handleChange = (
@@ -56,7 +72,7 @@ export default function ContactForm() {
           value={formData.name}
           onChange={handleChange}
           required
-          className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-black focus:outline-none transition-colors bg-white shadow-sm"
+          className="w-full px-4 py-3 border border-gray-200 focus:border-black focus:outline-none transition-colors bg-white shadow-sm"
         />
       </div>
 
@@ -74,7 +90,7 @@ export default function ContactForm() {
           value={formData.email}
           onChange={handleChange}
           required
-          className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-black focus:outline-none transition-colors bg-white shadow-sm"
+          className="w-full px-4 py-3 border border-gray-200 focus:border-black focus:outline-none transition-colors bg-white shadow-sm"
         />
       </div>
 
@@ -92,14 +108,14 @@ export default function ContactForm() {
           onChange={handleChange}
           required
           rows={6}
-          className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-black focus:outline-none transition-colors resize-none bg-white shadow-sm"
+          className="w-full px-4 py-3 border border-gray-200 focus:border-black focus:outline-none transition-colors resize-none bg-white shadow-sm"
         />
       </div>
 
       <button
         type="submit"
         disabled={status === 'submitting'}
-        className="w-full bg-black text-white py-3 rounded-lg font-light tracking-wide hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+        className="w-full bg-black text-white py-3 font-light tracking-wide hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
       >
         {status === 'submitting' ? 'Sending...' : 'Send Message'}
       </button>
@@ -110,7 +126,7 @@ export default function ContactForm() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center text-green-600 font-light"
         >
-          Message sent successfully!
+          Message sent successfully! Josh will get back to you soon.
         </motion.div>
       )}
 
@@ -120,7 +136,7 @@ export default function ContactForm() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center text-red-600 font-light"
         >
-          Something went wrong. Please try again.
+          Something went wrong. Please try again or email directly at joshgutie01@gmail.com
         </motion.div>
       )}
     </motion.form>

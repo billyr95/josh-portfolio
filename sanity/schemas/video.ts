@@ -46,6 +46,40 @@ export default {
       },
     },
     {
+      name: 'byline',
+      title: 'Byline',
+      type: 'string',
+      description: 'Short description or tagline',
+    },
+    {
+      name: 'description',
+      title: 'Description',
+      type: 'text',
+      rows: 4,
+      description: 'Full description or paragraph',
+    },
+    {
+      name: 'images',
+      title: 'Additional Images',
+      type: 'array',
+      of: [
+        {
+          type: 'image',
+          options: {
+            hotspot: true,
+          },
+          fields: [
+            {
+              name: 'alt',
+              title: 'Alt Text',
+              type: 'string',
+            },
+          ],
+        },
+      ],
+      description: 'Upload as many images as you want',
+    },
+    {
       name: 'order',
       title: 'Order',
       type: 'number',

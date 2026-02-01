@@ -5,6 +5,12 @@ export const videosQuery = `*[_type == "video"] | order(order asc) {
   "previewVideoUrl": previewVideo.asset->url,
   "fullVideoUrl": fullVideo.asset->url,
   "thumbnailUrl": thumbnail.asset->url,
+  byline,
+  description,
+  "images": images[]{
+    "url": asset->url,
+    alt
+  },
   order
 }`
 
