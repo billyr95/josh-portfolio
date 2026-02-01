@@ -31,7 +31,7 @@ export default {
     },
     {
       name: 'fullVideoUrl',
-      title: 'Full Video URL',
+      title: 'Full Video Embed URL',
       type: 'url',
       validation: (Rule: any) => Rule.required().uri({
         scheme: ['http', 'https']

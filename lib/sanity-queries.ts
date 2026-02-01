@@ -3,7 +3,7 @@ export const videosQuery = `*[_type == "video"] | order(order asc) {
   title,
   slug,
   "previewVideoUrl": previewVideo.asset->url,
-  "fullVideoUrl": fullVideo.asset->url,
+  fullVideoUrl,
   "thumbnailUrl": thumbnail.asset->url,
   byline,
   description,
