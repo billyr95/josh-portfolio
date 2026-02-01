@@ -49,7 +49,7 @@ export default function Navigation() {
                 {isActive && (
                   <motion.div
                     layoutId="activeLink"
-                    className="absolute -left-8 top-1/2 -translate-y-1/2 w-1 h-6 bg-black rounded-full"
+                    className="absolute -left-8 top-0 -translate-y-1/2 w-1 h-6 bg-black rounded-full"
                     transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                   />
                 )}
