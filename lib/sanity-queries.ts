@@ -19,6 +19,6 @@ export const photosQuery = `*[_type == "photo"] | order(order asc) {
   title,
   slug,
   "imageUrl": image.asset->url,
-  alt,
+  alt, 
   order
 }`
