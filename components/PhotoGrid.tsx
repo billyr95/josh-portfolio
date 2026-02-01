@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { Photo } from '@/lib/types'
 import PhotoCard from './PhotoCard'
 import PhotoModal from './PhotoModal'
-import { motion } from 'framer-motion'
 
 interface PhotoGridProps {
   photos: Photo[]
@@ -88,15 +87,12 @@ export default function PhotoGrid({ photos }: PhotoGridProps) {
     <>
       <div className="grid grid-cols-1 md:grid-cols-4 auto-rows-[280px] gap-[5px]">
         {displayedPhotos.map((photo, index) => (
-          <motion.div
+          <div
             key={`${photo._id}-${index}`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: (index % 6) * 0.05 }}
             className={getItemClass(index)}
           >
             <PhotoCard photo={photo} onClick={() => setSelectedPhoto(photo)} />
-          </motion.div>
+          </div>
         ))}
       </div>
 
