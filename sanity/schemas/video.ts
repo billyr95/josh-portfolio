@@ -27,15 +27,16 @@ export default {
         accept: 'video/*',
       },
       validation: (Rule: any) => Rule.required(),
+      description: 'Short preview video for the grid (hosted on Sanity)',
     },
     {
-      name: 'fullVideo',
-      title: 'Full Video',
-      type: 'file',
-      options: {
-        accept: 'video/*',
-      },
-      validation: (Rule: any) => Rule.required(),
+      name: 'fullVideoUrl',
+      title: 'Full Video URL',
+      type: 'url',
+      validation: (Rule: any) => Rule.required().uri({
+        scheme: ['http', 'https']
+      }),
+      description: 'YouTube or Vimeo embed URL (e.g., https://www.youtube.com/embed/VIDEO_ID or https://player.vimeo.com/video/VIDEO_ID)',
     },
     {
       name: 'thumbnail',
