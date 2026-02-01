@@ -5,7 +5,8 @@ export const client = createClient({
   projectId,
   dataset,
   apiVersion,
-  useCdn: true, // Use CDN for automatic updates
+  useCdn: true,
+  perspective: 'published', // Only fetch published documents
 })
 
 export async function sanityFetch<T>({
@@ -15,5 +16,10 @@ export async function sanityFetch<T>({
   query: string
   tags?: string[]
 }): Promise<T> {
-  return client.fetch<T>(query, {}, { next: { tags } })
+  return client.fetch<T>(query, {}, { 
+    next: { 
+      tags,
+      revalidate: 60 // Revalidate every 60 seconds
+    } 
+  })
 }
