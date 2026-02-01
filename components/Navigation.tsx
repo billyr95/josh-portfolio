@@ -52,7 +52,7 @@ export default function Navigation() {
                     className="absolute -left-8 top-0 -translate-y-1/2 w-1 h-6 bg-black rounded-full"
                     transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                   />
-                )}
+                )} 
               </Link>
             )
           })}
