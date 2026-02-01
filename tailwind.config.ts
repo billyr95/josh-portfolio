@@ -9,7 +9,12 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        sans: ['PP Neue York', 'system-ui', 'sans-serif'],
+      },
+      fontWeight: {
+        light: '300',
+        medium: '500',
+        extrabold: '800',
       },
       animation: {
         'fade-in': 'fadeIn 0.6s ease-out forwards',

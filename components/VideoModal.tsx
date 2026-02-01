@@ -71,7 +71,7 @@ export default function VideoModal({ video, onClose }: VideoModalProps) {
               {/* Content */}
               <div className="p-8">
                 {/* Title */}
-                <h1 className="text-3xl font-bold mb-2">{video.title}</h1>
+                <h1 className="text-3xl font-medium mb-2">{video.title}</h1>
 
                 {/* Byline */}
                 {video.byline && (
@@ -82,7 +82,7 @@ export default function VideoModal({ video, onClose }: VideoModalProps) {
 
                 {/* Description */}
                 {video.description && (
-                  <p className="text-gray-700 leading-relaxed mb-8 whitespace-pre-wrap">
+                  <p className="text-gray-700 leading-relaxed mb-8 whitespace-pre-wrap font-light">
                     {video.description}
                   </p>
                 )}

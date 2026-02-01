@@ -29,7 +29,7 @@ export default function Navigation() {
       >
         <Link
           href="/videos"
-          className="text-2xl font-light tracking-tight hover:opacity-70 transition-opacity mb-12"
+          className="text-2xl font-extrabold tracking-tight hover:opacity-70 transition-opacity mb-12"
         >
           Josh Gutie
         </Link>
@@ -64,7 +64,7 @@ export default function Navigation() {
         <div className="flex items-center justify-between px-6 py-4">
           <Link
             href="/videos"
-            className="text-xl font-light tracking-tight"
+            className="text-xl font-extrabold tracking-tight"
             onClick={closeMenu}
           >
             Josh Gutie
