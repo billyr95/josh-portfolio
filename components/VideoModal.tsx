@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { Video } from '@/lib/types'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
@@ -11,14 +11,6 @@ interface VideoModalProps {
 }
 
 export default function VideoModal({ video, onClose }: VideoModalProps) {
-  const videoRef = useRef<HTMLVideoElement>(null)
-
-  useEffect(() => {
-    if (video && videoRef.current) {
-      videoRef.current.play()
-    }
-  }, [video])
-
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -65,14 +57,14 @@ export default function VideoModal({ video, onClose }: VideoModalProps) {
             </button>
             
             <div className="bg-white rounded-lg overflow-hidden">
-              {/* Video */}
+              {/* Video Embed */}
               <div className="relative aspect-video bg-black">
-                <video
-                  ref={videoRef}
+                <iframe
                   src={video.fullVideoUrl}
-                  controls
-                  controlsList="nodownload"
                   className="w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title={video.title}
                 />
               </div>
 
