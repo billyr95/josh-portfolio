@@ -102,6 +102,7 @@ export default function PhotoGrid({ photos }: PhotoGridProps) {
 
       <PhotoModal
         photo={selectedPhoto}
+        photos={photos}
         onClose={() => setSelectedPhoto(null)}
       />
     </>
