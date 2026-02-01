@@ -5,7 +5,7 @@ export const client = createClient({
   projectId,
   dataset,
   apiVersion,
-  useCdn: false, // Disable CDN to get fresh data
+  useCdn: true, // Use CDN for automatic updates
 })
 
 export async function sanityFetch<T>({
