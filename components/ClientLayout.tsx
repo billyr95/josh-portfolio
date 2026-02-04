@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation'
 import Navigation from '@/components/Navigation'
 import PageTransition from '@/components/PageTransition'
+import LoadingScreen from '@/components/LoadingScreen'
 
 export default function ClientLayout({
   children,
@@ -18,6 +19,7 @@ export default function ClientLayout({
 
   return (
     <>
+      <LoadingScreen />
       <Navigation />
       <div className="pt-16 md:pt-0 md:pl-64">
         <PageTransition>{children}</PageTransition>
