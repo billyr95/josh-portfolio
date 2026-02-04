@@ -21,7 +21,7 @@ export default function LoadingScreen() {
     const timer = setTimeout(() => {
       setIsLoading(false)
       sessionStorage.setItem('hasLoadedOnce', 'true')
-      setTimeout(() => setHasLoaded(true), 800) // Remove component after fade out
+      setTimeout(() => setHasLoaded(true), 1000) // Remove component after fade out
     }, 2500)
 
     return () => clearTimeout(timer)
@@ -35,57 +35,71 @@ export default function LoadingScreen() {
         <motion.div
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.6, ease: 'easeInOut' }}
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-white overflow-hidden"
+          transition={{ duration: 0.8, ease: [0.43, 0.13, 0.23, 0.96] }}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-white"
         >
           <div className="relative">
-            {/* Text that gets eaten by the circle */}
-            <div className="relative overflow-hidden">
-              {/* Black text (default state) */}
-              <motion.div
-                initial={{ opacity: 1 }}
-                className="text-5xl md:text-8xl font-extrabold tracking-tight text-black"
-              >
-                Josh Gutie
-              </motion.div>
-
-              {/* White text revealed by expanding black circle */}
-              <div className="absolute inset-0 overflow-hidden">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 15 }}
-                  transition={{
-                    duration: 2,
-                    ease: [0.65, 0, 0.35, 1],
-                    delay: 0.3
-                  }}
-                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-black flex items-center justify-center"
-                  style={{
-                    filter: 'blur(1px)'
-                  }}
-                >
-                  <div className="text-5xl md:text-8xl font-extrabold tracking-tight text-white whitespace-nowrap">
-                    Josh Gutie
-                  </div>
-                </motion.div>
-              </div>
-            </div>
-
-            {/* Subtle pulse on the outer edge */}
+            {/* Main text */}
             <motion.div
-              initial={{ scale: 0, opacity: 0 }}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ 
+                duration: 0.8,
+                ease: [0.43, 0.13, 0.23, 0.96]
+              }}
+              className="text-6xl md:text-9xl font-extrabold tracking-tight"
+            >
+              {'Josh Gutie'.split('').map((char, index) => (
+                <motion.span
+                  key={index}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{
+                    duration: 0.3,
+                    delay: 0.4 + index * 0.08,
+                    ease: 'easeOut'
+                  }}
+                  className="inline-block"
+                >
+                  {char === ' ' ? '\u00A0' : char}
+                </motion.span>
+              ))}
+            </motion.div>
+
+            {/* Animated line sweep */}
+            <motion.div
+              initial={{ scaleX: 0, opacity: 0 }}
               animate={{ 
-                scale: [0, 1.5, 3],
-                opacity: [0, 0.3, 0]
+                scaleX: [0, 1, 1, 0],
+                opacity: [0, 1, 1, 0]
               }}
               transition={{
                 duration: 2,
-                ease: [0.65, 0, 0.35, 1],
-                delay: 0.5,
-                times: [0, 0.5, 1]
+                times: [0, 0.3, 0.7, 1],
+                ease: [0.43, 0.13, 0.23, 0.96],
+                delay: 1.2
               }}
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full border-4 border-black pointer-events-none"
+              className="absolute -bottom-4 left-0 right-0 h-0.5 bg-black origin-left"
             />
+
+            {/* Minimal dots */}
+            <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 flex gap-2">
+              {[0, 1, 2].map((i) => (
+                <motion.div
+                  key={i}
+                  initial={{ scale: 0 }}
+                  animate={{ 
+                    scale: [0, 1, 0],
+                  }}
+                  transition={{
+                    duration: 1.2,
+                    delay: 1.5 + i * 0.15,
+                    ease: [0.43, 0.13, 0.23, 0.96]
+                  }}
+                  className="w-2 h-2 rounded-full bg-black"
+                />
+              ))}
+            </div>
           </div>
         </motion.div>
       )}
