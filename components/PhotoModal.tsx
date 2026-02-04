@@ -74,7 +74,7 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
   }, [photo, pendingIndex])
 
   const handleNext = () => {
-    if (pendingIndex !== null) return // Already transitioning
+    if (pendingIndex !== null) return
     const nextIndex = (currentIndex + 1) % photos.length
     setPendingIndex(nextIndex)
     setPendingDirection(1)
@@ -82,7 +82,7 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
   }
 
   const handlePrevious = () => {
-    if (pendingIndex !== null) return // Already transitioning
+    if (pendingIndex !== null) return
     const prevIndex = (currentIndex - 1 + photos.length) % photos.length
     setPendingIndex(prevIndex)
     setPendingDirection(-1)
@@ -171,12 +171,51 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
             </svg>
           </button>
 
-          {/* Loading Spinner - shows when waiting for next image */}
-          {pendingIndex !== null && (
-            <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-              <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
-            </div>
-          )}
+          {/* Radial Wipe Loading Animation */}
+          <AnimatePresence>
+            {pendingIndex !== null && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none"
+              >
+                <div className="relative">
+                  {/* Black text layer */}
+                  <motion.div
+                    initial={{ opacity: 1 }}
+                    className="text-4xl md:text-6xl font-extrabold tracking-tight text-black absolute inset-0 flex items-center justify-center"
+                    style={{ mixBlendMode: 'difference' }}
+                  >
+                    Josh Gutie
+                  </motion.div>
+
+                  {/* White text layer (revealed by circle) */}
+                  <div className="text-4xl md:text-6xl font-extrabold tracking-tight text-white relative overflow-hidden">
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 3 }}
+                      transition={{
+                        duration: 1.2,
+                        ease: [0.25, 0.1, 0.25, 1],
+                        repeat: Infinity,
+                        repeatType: "loop"
+                      }}
+                      className="absolute inset-0 flex items-center justify-center"
+                    >
+                      <div className="w-full h-full rounded-full bg-black" 
+                           style={{ 
+                             filter: 'blur(20px)',
+                           }} 
+                      />
+                    </motion.div>
+                    <span className="relative z-10">Josh Gutie</span>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Hidden preloader for next image */}
           {pendingIndex !== null && (
