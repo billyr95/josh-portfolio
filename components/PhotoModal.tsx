@@ -14,12 +14,15 @@ interface PhotoModalProps {
 export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [direction, setDirection] = useState(0)
-  const [isTransitioning, setIsTransitioning] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (photo) {
       const index = photos.findIndex(p => p._id === photo._id)
       setCurrentIndex(index)
+      // Mark first image as loaded
+      setLoadedImages(new Set([photos[index].imageUrl]))
     }
   }, [photo, photos])
 
@@ -28,8 +31,14 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
     if (photos.length === 0) return
     
     const preloadImage = (index: number) => {
+      const imageUrl = photos[index].imageUrl
+      if (loadedImages.has(imageUrl)) return
+      
       const img = new window.Image()
-      img.src = photos[index].imageUrl
+      img.onload = () => {
+        setLoadedImages(prev => new Set([...prev, imageUrl]))
+      }
+      img.src = imageUrl
     }
 
     const nextIndex = (currentIndex + 1) % photos.length
@@ -37,15 +46,15 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
     
     preloadImage(nextIndex)
     preloadImage(prevIndex)
-  }, [currentIndex, photos])
+  }, [currentIndex, photos, loadedImages])
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose()
-      } else if (e.key === 'ArrowLeft' && !isTransitioning) {
+      } else if (e.key === 'ArrowLeft' && !isLoading) {
         handlePrevious()
-      } else if (e.key === 'ArrowRight' && !isTransitioning) {
+      } else if (e.key === 'ArrowRight' && !isLoading) {
         handleNext()
       }
     }
@@ -59,56 +68,68 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
       document.removeEventListener('keydown', handleEscape)
       document.body.style.overflow = 'unset'
     }
-  }, [photo, isTransitioning])
+  }, [photo, isLoading])
 
   const handleNext = () => {
-    if (isTransitioning) return
+    if (isLoading) return
     
     const nextIndex = (currentIndex + 1) % photos.length
-    const nextImage = photos[nextIndex].imageUrl
+    const nextImageUrl = photos[nextIndex].imageUrl
     
-    setIsTransitioning(true)
+    // If already loaded, transition immediately
+    if (loadedImages.has(nextImageUrl)) {
+      setDirection(1)
+      setCurrentIndex(nextIndex)
+      return
+    }
     
-    // Preload the next image
+    // Otherwise show loading spinner and wait
+    setIsLoading(true)
+    
     const img = new window.Image()
     img.onload = () => {
-      // Only transition after image is fully loaded
+      setLoadedImages(prev => new Set([...prev, nextImageUrl]))
       setDirection(1)
       setCurrentIndex(nextIndex)
-      setTimeout(() => setIsTransitioning(false), 500)
+      setIsLoading(false)
     }
     img.onerror = () => {
-      // If image fails to load, still transition
       setDirection(1)
       setCurrentIndex(nextIndex)
-      setTimeout(() => setIsTransitioning(false), 500)
+      setIsLoading(false)
     }
-    img.src = nextImage
+    img.src = nextImageUrl
   }
 
   const handlePrevious = () => {
-    if (isTransitioning) return
+    if (isLoading) return
     
     const prevIndex = (currentIndex - 1 + photos.length) % photos.length
-    const prevImage = photos[prevIndex].imageUrl
+    const prevImageUrl = photos[prevIndex].imageUrl
     
-    setIsTransitioning(true)
+    // If already loaded, transition immediately
+    if (loadedImages.has(prevImageUrl)) {
+      setDirection(-1)
+      setCurrentIndex(prevIndex)
+      return
+    }
     
-    // Preload the previous image
+    // Otherwise show loading spinner and wait
+    setIsLoading(true)
+    
     const img = new window.Image()
     img.onload = () => {
-      // Only transition after image is fully loaded
+      setLoadedImages(prev => new Set([...prev, prevImageUrl]))
       setDirection(-1)
       setCurrentIndex(prevIndex)
-      setTimeout(() => setIsTransitioning(false), 500)
+      setIsLoading(false)
     }
     img.onerror = () => {
-      // If image fails to load, still transition
       setDirection(-1)
       setCurrentIndex(prevIndex)
-      setTimeout(() => setIsTransitioning(false), 500)
+      setIsLoading(false)
     }
-    img.src = prevImage
+    img.src = prevImageUrl
   }
 
   const currentPhoto = photos[currentIndex]
@@ -154,7 +175,7 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
               e.stopPropagation()
               handlePrevious()
             }}
-            disabled={isTransitioning}
+            disabled={isLoading}
             className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-all z-20 w-12 h-12 flex items-center justify-center hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Previous photo"
           >
@@ -176,7 +197,7 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
               e.stopPropagation()
               handleNext()
             }}
-            disabled={isTransitioning}
+            disabled={isLoading}
             className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-all z-20 w-12 h-12 flex items-center justify-center hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Next photo"
           >
@@ -193,8 +214,8 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
           </button>
 
           {/* Simple Loading Spinner */}
-          {isTransitioning && (
-            <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+          {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
               <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
             </div>
           )}
