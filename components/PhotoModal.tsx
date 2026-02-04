@@ -15,13 +15,14 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
   const [currentIndex, setCurrentIndex] = useState(0)
   const [direction, setDirection] = useState(0)
   const [imageLoaded, setImageLoaded] = useState(false)
-  const [isTransitioning, setIsTransitioning] = useState(false)
+  const [pendingIndex, setPendingIndex] = useState<number | null>(null)
+  const [pendingDirection, setPendingDirection] = useState(0)
 
   useEffect(() => {
     if (photo) {
       const index = photos.findIndex(p => p._id === photo._id)
       setCurrentIndex(index)
-      setImageLoaded(false)
+      setImageLoaded(true) // First image is already loaded
     }
   }, [photo, photos])
 
@@ -41,13 +42,22 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
     preloadImage(prevIndex)
   }, [currentIndex, photos])
 
+  // When image loads, complete the transition
+  useEffect(() => {
+    if (imageLoaded && pendingIndex !== null) {
+      setDirection(pendingDirection)
+      setCurrentIndex(pendingIndex)
+      setPendingIndex(null)
+    }
+  }, [imageLoaded, pendingIndex, pendingDirection])
+
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose()
-      } else if (e.key === 'ArrowLeft' && !isTransitioning) {
+      } else if (e.key === 'ArrowLeft' && pendingIndex === null) {
         handlePrevious()
-      } else if (e.key === 'ArrowRight' && !isTransitioning) {
+      } else if (e.key === 'ArrowRight' && pendingIndex === null) {
         handleNext()
       }
     }
@@ -61,25 +71,26 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
       document.removeEventListener('keydown', handleEscape)
       document.body.style.overflow = 'unset'
     }
-  }, [photo, currentIndex, isTransitioning])
+  }, [photo, pendingIndex])
 
   const handleNext = () => {
-    if (isTransitioning) return
-    setIsTransitioning(true)
+    if (pendingIndex !== null) return // Already transitioning
+    const nextIndex = (currentIndex + 1) % photos.length
+    setPendingIndex(nextIndex)
+    setPendingDirection(1)
     setImageLoaded(false)
-    setDirection(1)
-    setCurrentIndex((prev) => (prev + 1) % photos.length)
   }
 
   const handlePrevious = () => {
-    if (isTransitioning) return
-    setIsTransitioning(true)
+    if (pendingIndex !== null) return // Already transitioning
+    const prevIndex = (currentIndex - 1 + photos.length) % photos.length
+    setPendingIndex(prevIndex)
+    setPendingDirection(-1)
     setImageLoaded(false)
-    setDirection(-1)
-    setCurrentIndex((prev) => (prev - 1 + photos.length) % photos.length)
   }
 
   const currentPhoto = photos[currentIndex]
+  const displayPhoto = pendingIndex !== null ? photos[pendingIndex] : currentPhoto
 
   const variants = {
     enter: (direction: number) => ({
@@ -122,7 +133,7 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
               e.stopPropagation()
               handlePrevious()
             }}
-            disabled={isTransitioning}
+            disabled={pendingIndex !== null}
             className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-all z-20 w-12 h-12 flex items-center justify-center hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Previous photo"
           >
@@ -144,7 +155,7 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
               e.stopPropagation()
               handleNext()
             }}
-            disabled={isTransitioning}
+            disabled={pendingIndex !== null}
             className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-all z-20 w-12 h-12 flex items-center justify-center hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Next photo"
           >
@@ -160,16 +171,30 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
             </svg>
           </button>
 
-          {/* Loading Spinner */}
-          {!imageLoaded && (
-            <div className="absolute inset-0 flex items-center justify-center z-10">
+          {/* Loading Spinner - shows when waiting for next image */}
+          {pendingIndex !== null && (
+            <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
               <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+            </div>
+          )}
+
+          {/* Hidden preloader for next image */}
+          {pendingIndex !== null && (
+            <div className="hidden">
+              <Image
+                src={displayPhoto.imageUrl}
+                alt="preload"
+                width={3840}
+                height={2160}
+                onLoad={() => setImageLoaded(true)}
+                priority
+              />
             </div>
           )}
 
           {/* Image Container */}
           <div className="relative w-full h-full flex items-center justify-center overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <AnimatePresence initial={false} custom={direction} mode="wait" onExitComplete={() => setIsTransitioning(false)}>
+            <AnimatePresence initial={false} custom={direction} mode="wait">
               <motion.div
                 key={currentPhoto._id}
                 custom={direction}
@@ -188,12 +213,9 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
                   alt={currentPhoto.alt || currentPhoto.title}
                   width={3840}
                   height={2160}
-                  className={`max-w-full max-h-[85vh] md:max-h-[90vh] w-auto h-auto object-contain transition-opacity duration-300 ${
-                    imageLoaded ? 'opacity-100' : 'opacity-0'
-                  }`}
+                  className="max-w-full max-h-[85vh] md:max-h-[90vh] w-auto h-auto object-contain"
                   quality={100}
                   priority
-                  onLoad={() => setImageLoaded(true)}
                 />
               </motion.div>
             </AnimatePresence>
