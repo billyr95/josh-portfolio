@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { Photo } from '@/lib/types'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -14,14 +14,11 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
   const [currentIndex, setCurrentIndex] = useState(0)
   const [direction, setDirection] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
-  const [imageLoaded, setImageLoaded] = useState(true)
-  const imageRef = useRef<HTMLImageElement>(null)
 
   useEffect(() => {
     if (photo) {
       const index = photos.findIndex(p => p._id === photo._id)
       setCurrentIndex(index)
-      setImageLoaded(true)
     }
   }, [photo, photos])
 
@@ -47,20 +44,12 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
     }
   }, [photo, isLoading])
 
-  const loadImage = (index: number, dir: number) => {
-    return new Promise<void>((resolve, reject) => {
-      const imageUrl = photos[index].imageUrl
+  const preloadImage = (url: string): Promise<void> => {
+    return new Promise((resolve, reject) => {
       const img = new Image()
-      
-      img.onload = () => {
-        resolve()
-      }
-      
-      img.onerror = () => {
-        reject()
-      }
-      
-      img.src = imageUrl
+      img.onload = () => resolve()
+      img.onerror = () => reject()
+      img.src = url
     })
   }
 
@@ -68,27 +57,27 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
     if (isLoading) return
     
     const nextIndex = (currentIndex + 1) % photos.length
+    const nextImageUrl = photos[nextIndex].imageUrl
     
+    // Show loading immediately
     setIsLoading(true)
-    setImageLoaded(false)
     
     try {
-      // Wait for image to FULLY load
-      await loadImage(nextIndex, 1)
+      // Wait for the next image to fully load
+      await preloadImage(nextImageUrl)
       
-      // Small delay to ensure render is ready
-      await new Promise(resolve => setTimeout(resolve, 100))
-      
-      // NOW update everything
+      // Only AFTER it's loaded, trigger the animation
       setDirection(1)
       setCurrentIndex(nextIndex)
-      setImageLoaded(true)
-      setIsLoading(false)
+      
+      // Small delay for the animation to start, then hide spinner
+      setTimeout(() => {
+        setIsLoading(false)
+      }, 200)
     } catch (error) {
-      // Even on error, show the image
+      // Even if image fails, transition anyway
       setDirection(1)
       setCurrentIndex(nextIndex)
-      setImageLoaded(true)
       setIsLoading(false)
     }
   }
@@ -97,27 +86,27 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
     if (isLoading) return
     
     const prevIndex = (currentIndex - 1 + photos.length) % photos.length
+    const prevImageUrl = photos[prevIndex].imageUrl
     
+    // Show loading immediately
     setIsLoading(true)
-    setImageLoaded(false)
     
     try {
-      // Wait for image to FULLY load
-      await loadImage(prevIndex, -1)
+      // Wait for the previous image to fully load
+      await preloadImage(prevImageUrl)
       
-      // Small delay to ensure render is ready
-      await new Promise(resolve => setTimeout(resolve, 100))
-      
-      // NOW update everything
+      // Only AFTER it's loaded, trigger the animation
       setDirection(-1)
       setCurrentIndex(prevIndex)
-      setImageLoaded(true)
-      setIsLoading(false)
+      
+      // Small delay for the animation to start, then hide spinner
+      setTimeout(() => {
+        setIsLoading(false)
+      }, 200)
     } catch (error) {
-      // Even on error, show the image
+      // Even if image fails, transition anyway
       setDirection(-1)
       setCurrentIndex(prevIndex)
-      setImageLoaded(true)
       setIsLoading(false)
     }
   }
@@ -210,7 +199,8 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none bg-black/60"
+                transition={{ duration: 0.15 }}
+                className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none bg-black/70"
               >
                 <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
               </motion.div>
@@ -234,11 +224,9 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
                 className="absolute max-w-full max-h-full flex items-center justify-center"
               >
                 <img
-                  ref={imageRef}
                   src={currentPhoto.imageUrl}
                   alt={currentPhoto.alt || currentPhoto.title}
                   className="max-w-full max-h-[85vh] md:max-h-[90vh] w-auto h-auto object-contain"
-                  style={{ opacity: imageLoaded ? 1 : 0 }}
                 />
               </motion.div>
             </AnimatePresence>
