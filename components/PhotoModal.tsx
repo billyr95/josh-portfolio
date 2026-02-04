@@ -1,9 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Photo } from '@/lib/types'
 import { motion, AnimatePresence } from 'framer-motion'
-import Image from 'next/image'
 
 interface PhotoModalProps {
   photo: Photo | null
@@ -13,15 +12,16 @@ interface PhotoModalProps {
 
 export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [displayIndex, setDisplayIndex] = useState(0)
   const [direction, setDirection] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
+  const [imageLoaded, setImageLoaded] = useState(true)
+  const imageRef = useRef<HTMLImageElement>(null)
 
   useEffect(() => {
     if (photo) {
       const index = photos.findIndex(p => p._id === photo._id)
       setCurrentIndex(index)
-      setDisplayIndex(index)
+      setImageLoaded(true)
     }
   }, [photo, photos])
 
@@ -47,65 +47,82 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
     }
   }, [photo, isLoading])
 
-  const handleNext = () => {
+  const loadImage = (index: number, dir: number) => {
+    return new Promise<void>((resolve, reject) => {
+      const imageUrl = photos[index].imageUrl
+      const img = new Image()
+      
+      img.onload = () => {
+        resolve()
+      }
+      
+      img.onerror = () => {
+        reject()
+      }
+      
+      img.src = imageUrl
+    })
+  }
+
+  const handleNext = async () => {
     if (isLoading) return
     
     const nextIndex = (currentIndex + 1) % photos.length
-    const nextImageUrl = photos[nextIndex].imageUrl
     
     setIsLoading(true)
-    setDirection(1)
+    setImageLoaded(false)
     
-    // Force image to load
-    const img = new window.Image()
-    img.onload = () => {
-      // Wait a tiny bit to ensure the image is ready
-      setTimeout(() => {
-        setCurrentIndex(nextIndex)
-        setDisplayIndex(nextIndex)
-        setIsLoading(false)
-      }, 50)
+    try {
+      // Wait for image to FULLY load
+      await loadImage(nextIndex, 1)
+      
+      // Small delay to ensure render is ready
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      // NOW update everything
+      setDirection(1)
+      setCurrentIndex(nextIndex)
+      setImageLoaded(true)
+      setIsLoading(false)
+    } catch (error) {
+      // Even on error, show the image
+      setDirection(1)
+      setCurrentIndex(nextIndex)
+      setImageLoaded(true)
+      setIsLoading(false)
     }
-    img.onerror = () => {
-      setTimeout(() => {
-        setCurrentIndex(nextIndex)
-        setDisplayIndex(nextIndex)
-        setIsLoading(false)
-      }, 50)
-    }
-    img.src = nextImageUrl
   }
 
-  const handlePrevious = () => {
+  const handlePrevious = async () => {
     if (isLoading) return
     
     const prevIndex = (currentIndex - 1 + photos.length) % photos.length
-    const prevImageUrl = photos[prevIndex].imageUrl
     
     setIsLoading(true)
-    setDirection(-1)
+    setImageLoaded(false)
     
-    // Force image to load
-    const img = new window.Image()
-    img.onload = () => {
-      // Wait a tiny bit to ensure the image is ready
-      setTimeout(() => {
-        setCurrentIndex(prevIndex)
-        setDisplayIndex(prevIndex)
-        setIsLoading(false)
-      }, 50)
+    try {
+      // Wait for image to FULLY load
+      await loadImage(prevIndex, -1)
+      
+      // Small delay to ensure render is ready
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      // NOW update everything
+      setDirection(-1)
+      setCurrentIndex(prevIndex)
+      setImageLoaded(true)
+      setIsLoading(false)
+    } catch (error) {
+      // Even on error, show the image
+      setDirection(-1)
+      setCurrentIndex(prevIndex)
+      setImageLoaded(true)
+      setIsLoading(false)
     }
-    img.onerror = () => {
-      setTimeout(() => {
-        setCurrentIndex(prevIndex)
-        setDisplayIndex(prevIndex)
-        setIsLoading(false)
-      }, 50)
-    }
-    img.src = prevImageUrl
   }
 
-  const currentPhoto = photos[displayIndex]
+  const currentPhoto = photos[currentIndex]
 
   const variants = {
     enter: (direction: number) => ({
@@ -186,14 +203,14 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
             </svg>
           </button>
 
-          {/* Loading Spinner - Higher z-index */}
+          {/* Loading Spinner */}
           <AnimatePresence>
             {isLoading && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none bg-black/50"
+                className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none bg-black/60"
               >
                 <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
               </motion.div>
@@ -214,16 +231,14 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
                   x: { type: "spring", stiffness: 300, damping: 30 },
                   opacity: { duration: 0.2 }
                 }}
-                className="absolute max-w-full max-h-full"
+                className="absolute max-w-full max-h-full flex items-center justify-center"
               >
-                <Image
+                <img
+                  ref={imageRef}
                   src={currentPhoto.imageUrl}
                   alt={currentPhoto.alt || currentPhoto.title}
-                  width={3840}
-                  height={2160}
                   className="max-w-full max-h-[85vh] md:max-h-[90vh] w-auto h-auto object-contain"
-                  quality={100}
-                  priority
+                  style={{ opacity: imageLoaded ? 1 : 0 }}
                 />
               </motion.div>
             </AnimatePresence>
@@ -233,7 +248,7 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-center z-20">
             <h2 className="text-lg font-light mb-1">{currentPhoto.title}</h2>
             <p className="text-sm text-gray-400">
-              {displayIndex + 1} / {photos.length}
+              {currentIndex + 1} / {photos.length}
             </p>
           </div>
         </motion.div>
