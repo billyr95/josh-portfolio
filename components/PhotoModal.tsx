@@ -13,40 +13,17 @@ interface PhotoModalProps {
 
 export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [displayIndex, setDisplayIndex] = useState(0)
   const [direction, setDirection] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
-  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (photo) {
       const index = photos.findIndex(p => p._id === photo._id)
       setCurrentIndex(index)
-      // Mark first image as loaded
-      setLoadedImages(new Set([photos[index].imageUrl]))
+      setDisplayIndex(index)
     }
   }, [photo, photos])
-
-  // Preload adjacent images
-  useEffect(() => {
-    if (photos.length === 0) return
-    
-    const preloadImage = (index: number) => {
-      const imageUrl = photos[index].imageUrl
-      if (loadedImages.has(imageUrl)) return
-      
-      const img = new window.Image()
-      img.onload = () => {
-        setLoadedImages(prev => new Set([...prev, imageUrl]))
-      }
-      img.src = imageUrl
-    }
-
-    const nextIndex = (currentIndex + 1) % photos.length
-    const prevIndex = (currentIndex - 1 + photos.length) % photos.length
-    
-    preloadImage(nextIndex)
-    preloadImage(prevIndex)
-  }, [currentIndex, photos, loadedImages])
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -76,27 +53,25 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
     const nextIndex = (currentIndex + 1) % photos.length
     const nextImageUrl = photos[nextIndex].imageUrl
     
-    // If already loaded, transition immediately
-    if (loadedImages.has(nextImageUrl)) {
-      setDirection(1)
-      setCurrentIndex(nextIndex)
-      return
-    }
-    
-    // Otherwise show loading spinner and wait
     setIsLoading(true)
+    setDirection(1)
     
+    // Force image to load
     const img = new window.Image()
     img.onload = () => {
-      setLoadedImages(prev => new Set([...prev, nextImageUrl]))
-      setDirection(1)
-      setCurrentIndex(nextIndex)
-      setIsLoading(false)
+      // Wait a tiny bit to ensure the image is ready
+      setTimeout(() => {
+        setCurrentIndex(nextIndex)
+        setDisplayIndex(nextIndex)
+        setIsLoading(false)
+      }, 50)
     }
     img.onerror = () => {
-      setDirection(1)
-      setCurrentIndex(nextIndex)
-      setIsLoading(false)
+      setTimeout(() => {
+        setCurrentIndex(nextIndex)
+        setDisplayIndex(nextIndex)
+        setIsLoading(false)
+      }, 50)
     }
     img.src = nextImageUrl
   }
@@ -107,32 +82,30 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
     const prevIndex = (currentIndex - 1 + photos.length) % photos.length
     const prevImageUrl = photos[prevIndex].imageUrl
     
-    // If already loaded, transition immediately
-    if (loadedImages.has(prevImageUrl)) {
-      setDirection(-1)
-      setCurrentIndex(prevIndex)
-      return
-    }
-    
-    // Otherwise show loading spinner and wait
     setIsLoading(true)
+    setDirection(-1)
     
+    // Force image to load
     const img = new window.Image()
     img.onload = () => {
-      setLoadedImages(prev => new Set([...prev, prevImageUrl]))
-      setDirection(-1)
-      setCurrentIndex(prevIndex)
-      setIsLoading(false)
+      // Wait a tiny bit to ensure the image is ready
+      setTimeout(() => {
+        setCurrentIndex(prevIndex)
+        setDisplayIndex(prevIndex)
+        setIsLoading(false)
+      }, 50)
     }
     img.onerror = () => {
-      setDirection(-1)
-      setCurrentIndex(prevIndex)
-      setIsLoading(false)
+      setTimeout(() => {
+        setCurrentIndex(prevIndex)
+        setDisplayIndex(prevIndex)
+        setIsLoading(false)
+      }, 50)
     }
     img.src = prevImageUrl
   }
 
-  const currentPhoto = photos[currentIndex]
+  const currentPhoto = photos[displayIndex]
 
   const variants = {
     enter: (direction: number) => ({
@@ -213,12 +186,19 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
             </svg>
           </button>
 
-          {/* Simple Loading Spinner */}
-          {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
-              <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
-            </div>
-          )}
+          {/* Loading Spinner - Higher z-index */}
+          <AnimatePresence>
+            {isLoading && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none bg-black/50"
+              >
+                <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Image Container */}
           <div className="relative w-full h-full flex items-center justify-center overflow-hidden" onClick={(e) => e.stopPropagation()}>
@@ -253,7 +233,7 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-center z-20">
             <h2 className="text-lg font-light mb-1">{currentPhoto.title}</h2>
             <p className="text-sm text-gray-400">
-              {currentIndex + 1} / {photos.length}
+              {displayIndex + 1} / {photos.length}
             </p>
           </div>
         </motion.div>
