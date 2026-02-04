@@ -14,15 +14,12 @@ interface PhotoModalProps {
 export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [direction, setDirection] = useState(0)
-  const [imageLoaded, setImageLoaded] = useState(false)
-  const [pendingIndex, setPendingIndex] = useState<number | null>(null)
-  const [pendingDirection, setPendingDirection] = useState(0)
+  const [isTransitioning, setIsTransitioning] = useState(false)
 
   useEffect(() => {
     if (photo) {
       const index = photos.findIndex(p => p._id === photo._id)
       setCurrentIndex(index)
-      setImageLoaded(true) // First image is already loaded
     }
   }, [photo, photos])
 
@@ -42,22 +39,13 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
     preloadImage(prevIndex)
   }, [currentIndex, photos])
 
-  // When image loads, complete the transition
-  useEffect(() => {
-    if (imageLoaded && pendingIndex !== null) {
-      setDirection(pendingDirection)
-      setCurrentIndex(pendingIndex)
-      setPendingIndex(null)
-    }
-  }, [imageLoaded, pendingIndex, pendingDirection])
-
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose()
-      } else if (e.key === 'ArrowLeft' && pendingIndex === null) {
+      } else if (e.key === 'ArrowLeft' && !isTransitioning) {
         handlePrevious()
-      } else if (e.key === 'ArrowRight' && pendingIndex === null) {
+      } else if (e.key === 'ArrowRight' && !isTransitioning) {
         handleNext()
       }
     }
@@ -71,26 +59,59 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
       document.removeEventListener('keydown', handleEscape)
       document.body.style.overflow = 'unset'
     }
-  }, [photo, pendingIndex])
+  }, [photo, isTransitioning])
 
   const handleNext = () => {
-    if (pendingIndex !== null) return // Already transitioning
+    if (isTransitioning) return
+    
     const nextIndex = (currentIndex + 1) % photos.length
-    setPendingIndex(nextIndex)
-    setPendingDirection(1)
-    setImageLoaded(false)
+    const nextImage = photos[nextIndex].imageUrl
+    
+    setIsTransitioning(true)
+    
+    // Preload the next image
+    const img = new window.Image()
+    img.onload = () => {
+      // Only transition after image is fully loaded
+      setDirection(1)
+      setCurrentIndex(nextIndex)
+      setTimeout(() => setIsTransitioning(false), 500)
+    }
+    img.onerror = () => {
+      // If image fails to load, still transition
+      setDirection(1)
+      setCurrentIndex(nextIndex)
+      setTimeout(() => setIsTransitioning(false), 500)
+    }
+    img.src = nextImage
   }
 
   const handlePrevious = () => {
-    if (pendingIndex !== null) return // Already transitioning
+    if (isTransitioning) return
+    
     const prevIndex = (currentIndex - 1 + photos.length) % photos.length
-    setPendingIndex(prevIndex)
-    setPendingDirection(-1)
-    setImageLoaded(false)
+    const prevImage = photos[prevIndex].imageUrl
+    
+    setIsTransitioning(true)
+    
+    // Preload the previous image
+    const img = new window.Image()
+    img.onload = () => {
+      // Only transition after image is fully loaded
+      setDirection(-1)
+      setCurrentIndex(prevIndex)
+      setTimeout(() => setIsTransitioning(false), 500)
+    }
+    img.onerror = () => {
+      // If image fails to load, still transition
+      setDirection(-1)
+      setCurrentIndex(prevIndex)
+      setTimeout(() => setIsTransitioning(false), 500)
+    }
+    img.src = prevImage
   }
 
   const currentPhoto = photos[currentIndex]
-  const displayPhoto = pendingIndex !== null ? photos[pendingIndex] : currentPhoto
 
   const variants = {
     enter: (direction: number) => ({
@@ -133,7 +154,7 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
               e.stopPropagation()
               handlePrevious()
             }}
-            disabled={pendingIndex !== null}
+            disabled={isTransitioning}
             className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-all z-20 w-12 h-12 flex items-center justify-center hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Previous photo"
           >
@@ -155,7 +176,7 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
               e.stopPropagation()
               handleNext()
             }}
-            disabled={pendingIndex !== null}
+            disabled={isTransitioning}
             className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-all z-20 w-12 h-12 flex items-center justify-center hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Next photo"
           >
@@ -171,24 +192,10 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
             </svg>
           </button>
 
-          {/* Loading Spinner - shows when waiting for next image */}
-          {pendingIndex !== null && (
+          {/* Simple Loading Spinner */}
+          {isTransitioning && (
             <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
               <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
-            </div>
-          )}
-
-          {/* Hidden preloader for next image */}
-          {pendingIndex !== null && (
-            <div className="hidden">
-              <Image
-                src={displayPhoto.imageUrl}
-                alt="preload"
-                width={3840}
-                height={2160}
-                onLoad={() => setImageLoaded(true)}
-                priority
-              />
             </div>
           )}
 
