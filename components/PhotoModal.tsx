@@ -74,7 +74,7 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
   }, [photo, pendingIndex])
 
   const handleNext = () => {
-    if (pendingIndex !== null) return
+    if (pendingIndex !== null) return // Already transitioning
     const nextIndex = (currentIndex + 1) % photos.length
     setPendingIndex(nextIndex)
     setPendingDirection(1)
@@ -82,7 +82,7 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
   }
 
   const handlePrevious = () => {
-    if (pendingIndex !== null) return
+    if (pendingIndex !== null) return // Already transitioning
     const prevIndex = (currentIndex - 1 + photos.length) % photos.length
     setPendingIndex(prevIndex)
     setPendingDirection(-1)
@@ -171,7 +171,7 @@ export default function PhotoModal({ photo, photos, onClose }: PhotoModalProps) 
             </svg>
           </button>
 
-          {/* Simple Loading Spinner */}
+          {/* Loading Spinner - shows when waiting for next image */}
           {pendingIndex !== null && (
             <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
               <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
