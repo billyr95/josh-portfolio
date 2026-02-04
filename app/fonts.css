@@ -1,7 +1,7 @@
 /* PP Neue York Font Family */
 @font-face {
   font-family: 'PP Neue York';
-  src: url('/PPNeueYork-NarrowExtrabold.woff2') format('woff2');
+  src: url('/fonts/PPNeueYork-NarrowExtrabold.woff2') format('woff2');
   font-weight: 800;
   font-style: normal;
   font-display: swap;
@@ -9,7 +9,7 @@
 
 @font-face {
   font-family: 'PP Neue York';
-  src: url('/PPNeueYork-NarrowMedium.woff2') format('woff2');
+  src: url('/fonts/PPNeueYork-NarrowMedium.woff2') format('woff2');
   font-weight: 500;
   font-style: normal;
   font-display: swap;
@@ -17,7 +17,7 @@
 
 @font-face {
   font-family: 'PP Neue York';
-  src: url('/PPNeueYork-NarrowLight.woff2') format('woff2');
+  src: url('/fonts/PPNeueYork-NarrowLight.woff2') format('woff2');
   font-weight: 300;
   font-style: normal;
   font-display: swap;
